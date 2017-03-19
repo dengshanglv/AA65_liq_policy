@@ -12,7 +12,7 @@ NS = 3; % number of states.
 pr_mat = [0.6 0.2 0.2 0.2 0.6 0.2 0.2 0.2 0.6];
 
 guess00 = ...
-[ 2.4114762705920170718317580796148, 2.4138118364262056566930769562762, 2.5059493913122612193589211659574, 2.5152555100368670652293191479732, 0.041287169047860854404660377213882, 0.035466326768463639038801947875281, 0.13271335680706158133913808879342, 0.13247449381129901842277215334803, 0.13177590878473461135804685946781, 0.13117697587365139147798900969245, 0.39354094918352331644419325324678, 0.39341960180572139599832124371132, 0.40763483992985825174617995807737, 0.40787074446899108197785268824902]
+2/3*[2.4115    2.5059    0.0413    0.1327    0.1318    0.3935    0.4076 2.4115    2.5059    0.0413    0.1327    0.1318    0.3935    0.4076 2.4115    2.5059    0.0413    0.1327    0.1318    0.3935    0.4076]
 guess1 = ...
 [ 0.000049094183534151009639894043200152, 2.4114832380195587015312630023722, 2.5059183084592670632322814596045, 0.39339100915833805829113086946176, 2.1927856484896820024370394243769, 0.40783575579828698370339844989306, -2.9230539810415883929292144580553, 0.041299226760587117618227769011617, 0.035479216202359325751177142838184, 0.13271329319097929883023759690886, 0.1324602822143816286259547007431, 0.13177658886755127124205908773396, 0.13116424375499268040374394538242, 0.39354200434662717751343038465057, 0.40763106191078459303873390339754]
 guess2 = ...
@@ -20,9 +20,9 @@ guess2 = ...
 
 syms x1 x2 x3 y;
 v = sqrt(x2);
-% u = log(x1);
-eta = 1.05;
-u = x1^(1-eta)/(1-eta);
+u = log(x1);
+% eta = 1.05;
+% u = x1^(1-eta)/(1-eta);
 
 udif = diff(u);
 vdif = diff(v);
@@ -87,8 +87,8 @@ welt2d = use(u, xnewd)+use(u, subs(xnewd, zmd, zmd-md));
 weld = use(u,  - zmd - zld) + 0.5*(beta*sum(reshape(welt2d.*pr_mat,NS,NS)) + use(v,yd));
 
 %% if i == 0
-conc = sym('conc', ones([1 NS]), 'positive');
-cond = sym('cond', ones([1 NS]), 'positive');
+conc = sym('conc', [1 NS], 'positive');
+cond = sym('cond', [1 NS], 'positive');
 
 eqn1 = eq1+eq2;
 noweq = [eqn1, eq3, eqn4, eq5, eqn6, eq7, eq8];
@@ -96,26 +96,14 @@ noweq = subs(noweq,irate,zeros([1 NS]));
 noweq = subs(noweq, qnew, q);
 noweq = subs(noweq, [zmc, zmd], [omega-zlc-conc, -zld-cond]);
 noweq = simplify(noweq);
-% 
-% [zconc1, zconc2] = solve(noweq([5,6]), conc);
-% 
-% nconc1 = sidx(solve(noweq(3), conc(1)),1);
-% nconc2 = sidx(solve(noweq(4), conc(2)),1);
-% 
-% noweq(3) = conc(1) - nconc1;
-% noweq(4) = conc(2) - nconc2;
-% noweq(5) = conc(1) - zconc1;
-% noweq(6) = conc(2) - zconc2;
 
+%% 
+tpri = reshape(noweq, 3, []);
+part1 = tpri(1, [2 3 6]);
+
+%%
 [sconc1,sconc2,scond1,scond2,sq1,sq2,syc1,syc2,syd1,syd2,smc1,smc2,smd1,smd2] = ...
     vpasolve(noweq,[conc, cond, q, yc, yd, mc, md], guess00);
-% objf = @(x)(sum(double(subs(noweq, [conc, cond, q, yc, yd, mc, md], x)).^2));
-% x0 = [ 14.5, 14.5, 13.2, 13.9, 1.14, 0.768, 0.137, 0.137, 0.137, 0.137, 2.32, 2.32, 2.11, 2.23];
-% lb = zeros([14 1]);
-% 
-% pm = createOptimProblem('fmincon', 'objective', objf,'x0',x0, 'lb', lb);
-% gs = GlobalSearch('Display', 'iter');
-% [x,f] = run(gs, pm);
 
 s00 = [sconc1,sconc2,scond1,scond2,sq1,sq2,syc1,syc2,syd1,syd2,smc1,smc2,smd1,smd2];
 
